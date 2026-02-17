@@ -5,9 +5,10 @@ import { supabase } from '../lib/supabase';
 import { useStorageCompare } from '../context/StorageCompareContext';
 import { useStorageFavorites } from '../context/StorageFavoritesContext';
 import { getStorageImageUrl, getStorageFallbackUrl } from '../lib/storageImage';
+import { getCheapestPrice, getDiscountPercent, getOfferCount } from '../lib/storagePrices';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
-import { Search, ChevronDown, Grid3x3, Square, CheckSquare, Heart } from 'lucide-react';
+import { Search, ChevronDown, Grid3x3, Square, CheckSquare, Heart, Tag, ExternalLink } from 'lucide-react';
 import './StorageDatabase.css';
 
 export default function StorageDatabase() {
@@ -307,6 +308,9 @@ export default function StorageDatabase() {
                 const isSelected = !!selectedStorage.find((s) => s.id === item.id);
                 const imageUrl = getStorageImageUrl(item.brand, item.model);
                 const fallbackUrl = getStorageFallbackUrl(item.brand);
+                const cheapest = getCheapestPrice(item.slug);
+                const discount = getDiscountPercent(item.slug);
+                const offerCount = getOfferCount(item.slug);
 
                 return (
                   <div key={item.id} className="ev-card">
@@ -322,6 +326,9 @@ export default function StorageDatabase() {
                           }
                         }}
                       />
+                      {discount && (
+                        <span className="card-discount-badge">-{discount}%</span>
+                      )}
                       <button
                         className="card-favorite-btn"
                         onClick={(e) => { e.stopPropagation(); toggleFavorite(item.id); }}
@@ -363,7 +370,20 @@ export default function StorageDatabase() {
                       </div>
 
                       <div className="card-footer">
-                        <div className="card-price">€{(item.price_per_module_eur || 0).toLocaleString()}</div>
+                        <div className="card-price-section">
+                          {cheapest ? (
+                            <>
+                              <div className="card-price card-price--best">ab €{cheapest.toLocaleString()}</div>
+                              {offerCount > 0 && (
+                                <div className="card-offers-count">
+                                  <Tag size={12} /> {offerCount} Angebote
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="card-price">€{(item.price_per_module_eur || 0).toLocaleString()}</div>
+                          )}
+                        </div>
                         <button className="card-link-btn" onClick={(e) => { e.stopPropagation(); navigate(`/storage/${item.slug}`); }}>
                           View
                         </button>

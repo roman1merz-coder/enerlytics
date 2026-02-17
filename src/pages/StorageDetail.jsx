@@ -5,10 +5,11 @@ import { supabase } from '../lib/supabase';
 import { useStorageCompare } from '../context/StorageCompareContext';
 import { useStorageFavorites } from '../context/StorageFavoritesContext';
 import { getStorageImageUrl, getStorageFallbackUrl } from '../lib/storageImage';
+import { getStoragePrices, getCheapestPrice, getDiscountPercent } from '../lib/storagePrices';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import PaybackCalculator from '../components/PaybackCalculator';
-import { Heart, Plus, ArrowLeft } from 'lucide-react';
+import { Heart, Plus, ArrowLeft, ExternalLink, Tag, TrendingDown } from 'lucide-react';
 import './StorageDetail.css';
 
 export default function StorageDetail() {
@@ -248,6 +249,74 @@ export default function StorageDetail() {
               </div>
             ))}
           </div>
+
+          {/* Price Offers Section */}
+          {(() => {
+            const priceData = getStoragePrices(storage.slug);
+            const cheapest = getCheapestPrice(storage.slug);
+            const discount = getDiscountPercent(storage.slug);
+            if (!priceData) return null;
+
+            return (
+              <div className="price-offers-section">
+                <div className="price-offers-header">
+                  <h2 className="spec-section-title">
+                    <Tag size={20} /> Price Comparison — Germany
+                  </h2>
+                  {discount && (
+                    <span className="price-discount-badge">
+                      <TrendingDown size={14} /> Save up to {discount}%
+                    </span>
+                  )}
+                </div>
+
+                {priceData.msrp_eur && (
+                  <div className="price-msrp-row">
+                    <span className="msrp-label">Official Retail Price (MSRP)</span>
+                    <span className="msrp-value">€{priceData.msrp_eur.toLocaleString()}</span>
+                  </div>
+                )}
+
+                <div className="price-offers-list">
+                  {priceData.offers
+                    .slice()
+                    .sort((a, b) => a.price - b.price)
+                    .map((offer, idx) => {
+                      const isCheapest = offer.price === cheapest;
+                      return (
+                        <a
+                          key={idx}
+                          href={offer.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`price-offer-row ${isCheapest ? 'price-offer-row--best' : ''}`}
+                        >
+                          <div className="offer-shop">
+                            <span className="offer-shop-name">{offer.shop}</span>
+                            {offer.note && <span className="offer-note">{offer.note}</span>}
+                          </div>
+                          <div className="offer-price-col">
+                            <span className="offer-price">€{offer.price.toLocaleString()}</span>
+                            {isCheapest && <span className="offer-best-tag">Best Price</span>}
+                            {priceData.msrp_eur && offer.price < priceData.msrp_eur && (
+                              <span className="offer-savings">
+                                -{Math.round(((priceData.msrp_eur - offer.price) / priceData.msrp_eur) * 100)}%
+                              </span>
+                            )}
+                          </div>
+                          <ExternalLink size={14} className="offer-link-icon" />
+                        </a>
+                      );
+                    })}
+                </div>
+
+                <p className="price-disclaimer">
+                  Prices incl. 0% MwSt for private customers (§12 Abs. 3 UStG). Prices may vary.
+                  Last updated: February 2026.
+                </p>
+              </div>
+            );
+          })()}
 
           {storage.certifications && storage.certifications.length > 0 && (
             <div className="detail-notes">

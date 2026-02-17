@@ -435,10 +435,43 @@
   gap: 12px;
 }
 
+.card-price-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .card-price {
   font-size: 15px;
   font-weight: 800;
   color: var(--teal);
+}
+
+.card-price--best {
+  color: #059669;
+}
+
+.card-offers-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 500;
+}
+
+.card-discount-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: #059669;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  z-index: 2;
+  letter-spacing: 0.3px;
 }
 
 .card-link-btn {
