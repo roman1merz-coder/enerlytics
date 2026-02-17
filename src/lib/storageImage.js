@@ -15,18 +15,25 @@ const BRAND_SLUG_MAP = {
   'RCT Power': 'rct-power',
   'SENEC': 'senec',
   'Tesla': 'tesla',
+  'LG': 'lg',
   'LG Chem': 'lg-chem',
   'VARTA': 'varta',
   'Huawei': 'huawei',
   'Pylontech': 'pylontech',
   'SolarEdge': 'solaredge',
+  'AlphaESS': 'alphaess',
   'Alpha ESS': 'alpha-ess',
   'Sungrow': 'sungrow',
+  'GoodWe': 'goodwe',
   'Goodwe': 'goodwe',
   'Fronius': 'fronius',
+  'KOSTAL': 'kostal',
   'Kostal': 'kostal',
+  'FENECON': 'fenecon',
   'Fenecon': 'fenecon',
   'Q.HOME': 'qhome',
+  'SMA': 'sma',
+  'SOLARWATT': 'solarwatt',
   'Solarwatt': 'solarwatt',
   'Viessmann': 'viessmann',
 };
@@ -35,16 +42,16 @@ const BRAND_SLUG_MAP = {
  * Model-specific image overrides
  */
 const MODEL_IMAGE_MAP = {
-  'byd-battery-box-premium-hvs': 'battery-box-premium-hvs',
-  'sonnenbatterie-10': 'sonnenbatterie-10',
-  'e3dc-s10-e-pro': 's10-e-pro',
-  'rct-power-battery': 'power-battery',
-  'senec-home-v3-hybrid': 'home-v3-hybrid',
-  'tesla-powerwall-3': 'powerwall-3',
-  'lg-chem-resu-10h': 'resu-10h',
-  'varta-pulse-neo': 'pulse-neo',
-  'huawei-luna2000': 'luna2000',
-  'pylontech-force-l2': 'force-l2',
+  // Fix: DB model "Battery-Box Premium" slugifies to "battery-box-premium" but Supabase has "battery-box-premium-hvs"
+  'byd-battery-box-premium': 'battery-box-premium-hvs',
+  // Fix: DB model "sonnenBatterie 10" slugifies to "sonnenbatterie-10" but Supabase has "batterie-10"
+  'sonnen-sonnenbatterie-10': 'batterie-10',
+  // Fix: DB model "sonnenBatterie eco 9" slugifies to "sonnenbatterie-eco-9" but Supabase has "eco-9"
+  'sonnen-sonnenbatterie-eco-9': 'eco-9',
+  // Fix: DB model "Sunny Boy Storage 5.0" slugifies to "sunny-boy-storage-50" but Supabase has "sunny-boy-storage-5"
+  'sma-sunny-boy-storage-50': 'sunny-boy-storage-5',
+  // Fix: DB model "PIKO IQ 5.5" slugifies to "piko-iq-55" but Supabase has "piko-iq-55" (matches!)
+  'kostal-piko-iq-55': 'piko-iq-55',
 };
 
 /**

@@ -10,6 +10,7 @@ import Compare from './pages/Compare';
 import Matcher from './pages/Matcher';
 import StorageDatabase from './pages/StorageDatabase';
 import StorageDetail from './pages/StorageDetail';
+import StorageCompare from './pages/StorageCompare';
 import './App.css';
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
               <Route path="/compare" element={<Compare />} />
               <Route path="/match" element={<Matcher />} />
               <Route path="/storage" element={<StorageDatabase />} />
+              <Route path="/storage/compare" element={<StorageCompare />} />
               <Route path="/storage/:slug" element={<StorageDetail />} />
             </Routes>
           </StorageCompareProvider>
