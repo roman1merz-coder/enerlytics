@@ -1,0 +1,58 @@
+footer.footer {
+  padding: 32px 0;
+  border-top: 1px solid var(--card-border);
+  background: var(--bg);
+}
+
+.footer-in {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text3);
+}
+
+.footer-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.footer-mark svg {
+  width: 12px;
+  height: 12px;
+  color: #fff;
+}
+
+.footer-name {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.footer-sep {
+  color: var(--text3);
+}
+
+.footer-tag {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+@media (max-width: 640px) {
+  .footer-in {
+    padding: 0 20px;
+    font-size: 11px;
+    gap: 12px;
+  }
+  .footer-tag {
+    display: none;
+  }
+}
