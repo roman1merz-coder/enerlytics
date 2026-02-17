@@ -1,1 +1,266 @@
-import { useState, useEffect } from 'react'; import { useParams, useNavigate } from 'react-router-dom'; import { Helmet } from 'react-helmet-async'; import { supabase } from '../lib/supabase'; import { useStorageCompare } from '../context/StorageCompareContext'; import { useStorageFavorites } from '../context/StorageFavoritesContext'; import { getStorageImageUrl, getStorageFallbackUrl } from '../lib/storageImage'; import Nav from '../components/Nav'; import Footer from '../components/Footer'; import PaybackCalculator from '../components/PaybackCalculator'; import { Heart, Plus, ArrowLeft } from 'lucide-react'; import './StorageDetail.css'; export default function StorageDetail() { const { slug } = useParams(); const navigate = useNavigate(); const { selectedStorage, addStorage, removeStorage } = useStorageCompare(); const { toggleFavorite, isFavorite } = useStorageFavorites(); const [storage, setStorage] = useState(null); const [loading, setLoading] = useState(true); useEffect(() => { fetchStorage(); }, [slug]); const fetchStorage = async () => { try { const { data, error } = await supabase .from('battery_storage') .select('*') .eq('slug', slug) .single(); if (error) throw error; setStorage(data); } catch (error) { console.error('Error fetching storage:', error); } finally { setLoading(false); } }; if (loading) { return ( <> <Nav /> <div className="ev-detail"> <div className="loading">Loading...</div> </div> <Footer /> </> ); } if (!storage) { return ( <> <Nav /> <div className="ev-detail"> <div className="empty-state">Storage system not found</div> </div> <Footer /> </> ); } const isInCompare = !!selectedStorage.find((s) => s.id === storage.id); const isInFavorites = isFavorite(storage.id); const imageUrl = getStorageImageUrl(storage.brand, storage.model); const fallbackUrl = getStorageFallbackUrl(storage.brand); const handleAddToCompare = () => { if (isInCompare) { removeStorage(storage.id); } else { addStorage(storage); } }; const specs = [ { category: 'Capacity & Modules', items: [ { label: 'Module Capacity', value: `${storage.module_capacite_kwh} kWh` }, { label: 'Min Modules', value: `${storage.min_modules || 1}` }, { label: 'Max Modules', value: `${storage.max_modules}` }, ...(storage.total_capacity_min_kwh ? [{ label: 'Min System Capacity', value: `${storage.total_capacity_min_kwh.toFixed(1)} kWh` }] : []), ...(storage.total_capacity_max_kwh ? [{ label: 'Max System Capacity', value: `${storage.total_capacity_max_kwh.toFixed(1)} kWh` }] : []), ], }, { category: 'Battery Technology', items: [ ...(storage.cell_technology ? [{ label: 'Cell Technology', value: storage.cell_technology }] : []), ...(storage.cycle_life ? [{ label: 'Cycle Life', value: `${storage.cycle_life.toLocaleString()} cycles` }] : []), ...(storage.depth_of_discharge_pct ? [{ label: 'Depth of Discharge', value: `${storage.depth_of_discharge_pct}%` }] : []), ], }, { category: 'Performance', items: [ ...(storage.efficiency_pct ? [{ label: 'Round-Trip Efficiency', value: `${storage.efficiency_pct}%` }] : []), ...(storage.charge_power_kw ? [{ label: 'Max Charge Power', value: `${storage.charge_power_kw} kW` }] : []), ...(storage.discharge_power_kw ? [{ label: 'Max Discharge Power', value: `${storage.discharge_power_kw} kW` }] : []), ...(storage.continuous_power_kw ? [{ label: 'Continuous Power', value: `${storage.continuous_power_kw} kW` }] : []), ...(storage.peak_power_kw ? [{ label: 'Peak Power', value: `${storage.peak_power_kw} kW` }] : []), ], }, ...(storage.compatible_inverters && storage.compatible_inverters.length > 0 ? [{ category: 'Inverter Compatibility', items: [ { label: 'Compatible Inverters', value: storage.compatible_inverters.join(', ') }, ...(storage.inverter_type ? [{ label: 'Inverter Type', value: storage.inverter_type }] : []), { label: 'Backup Capable', value: storage.backup_capable ? 'Yes' : 'No' }, ], }] : []), { category: 'Installation', items: [ ...(storage.mounting_type ? [{ label: 'Mounting Type', value: storage.mounting_type }] : []), ...(storage.dimensions_h_mm ? [{ label: 'Dimensions (H×(×(È°)', value: `${storage.dimensions_h_mm} × ${storage.dimensions_w_mm} × ${storage.dimensions_d_mm} mm` }] : []), ...(storage.weight_kg ? [{ label: 'Weight', value: `${storage.weight_kg} kg` }] : []), ...(storage.ip_rating ? [{ label: 'IP Rating', value: storage.ip_rating }] : []), ...(storage.operating_temp_min_c !== null && storage.operating_temp_min_c !== undefined ? [{ label: 'Operating Temperature', value: `${storage.operating_temp_min_c}°C to ${storage.operating_temp_max_c}°C` }] : []), ], }, { category: 'Economics', items: [ { label: 'Price per Module', value: `€${storage.price_per_module_eur?.toLocaleString()}` }, ...(storage.installation_cost_eur ? [{ label: 'Installation Cost (est.)', value: `€${storage.installation_cost_eur.toLocaleString()}` }] : []), ...(storage.price_per_module_eur && storage.module_capacity_kwh ? [{ label: 'Price per kWh', value: `€${Math.round(storage.price_per_module_eur / storage.module_capacity_kwh).toLocaleString()}` }] : []), ], }, ...((storage.warranty_years || storage.warranty_cycles) ? [{ category: 'Warranty', items: [ ...(storage.warranty_years ? [{ label: 'Warranty Period', value: `${storage.warranty_years} years` }] : []), ...(storage.warranty_cycles ? [{ label: 'Warranty Cycles', value: `${storage.warranty_cycles.toLocaleString()} cycles` }] : []), ...(storage.warranty_capacity_retention_pct ? [{ label: 'Capacity Retention', value: `${storage.warranty_capacity_retention_pct}%` }] : []), ], }] : []), { category: 'Smart Features', items: [ { label: 'Mobile App', value: storage.has_app ? 'Yes' : 'No' }, { label: 'Energy Management', value: storage.has_energy_management ? 'Yes' : 'No' }, { label: 'Solar Compatible', value: storage.supports_solar ? 'Yes' : 'No' }, { label: 'Grid Services', value: storage.supports_grid_services ? 'Yes' : 'No' }, ], }, ]; return ( <> <Helmet> <title>{`${storage.brand} ${storage.model} ⨔ Battery Storage | Enerlytics`}</title> <meta name="description" content={`${storage.brand} ${storage.model}: ${storage.module_capacity_kwh} kWh module, ${storage.cell_technology || 'advanced'} cells, €${storage.price_per_module_eur?.toLocaleString()} per module. View full specs and calculate payback period.`} /> </Helmet>  <Nav />  <div className="ev-detail"> <div className="detail-container"> <div className="detail-header"> <button className="back-link" onClick={() => navigate('/storage')}> <ArrowLeft size={16} /> Back to Storage Database </button> <h1 className="detail-title">{storage.brand} {storage.model}</h1> <p className="detail-subtitle">{storage.variant || ''}</p> </div>  <div className="detail-hero"> <div className="hero-image-placeholder"> <img src={imageUrl} alt={`${storage.brand} ${storage.model}`} className="detail-car-image" onError={(e) => { if (e.target.src !== fallbackUrl) { e.target.src = fallbackUrl; } else { e.target.style.display = 'none'; } }} /> </div>  <div className="hero-info"> <div className="info-badges"> {storage.cell_technology && <span className="badge segment">{storage.cell_technology}</span>} {storage.production_location && <span className="badge status">{storage.production_location}</span>} {storage.backup_capable && <span className="badge segment">Backup</span>} </div> <div className="info-highlights"> <div className="highlight"> <div className="highlight-label">Module</div> <div className="highlight-value">{storage.module_capacity_kwh} kWh</div> </div> <div className="highlight"> <div className="highlight-label">Price</div> <div className="highlight-value">€{(storage.price_per_module_eur || 0).toLocaleString()}</div> </div> <div className="highlight"> <div className="highlight-label">Power</div> <div className="highlight-value">{storage.continuous_power_kw || 'N/A'} kW</div> </div> </div>  <div className="detail-actions"> <button className={`add-compare-btn ${isInCompare ? 'selected' : ''}`} onClick={handleAddToCompare}> <Plus size={18} /> {isInCompare ? 'Remove from Compare' : 'Add to Compare'} </button> <button className={`favorite-btn ${isInFavorites ? 'favorited' : ''}`} onClick={() => toggleFavorite(storage.id)} title={isInFavorites ? 'Remove from favorites' : 'Add to favorites'}> <Heart size={18} fill={isInFavorites ? 'currentColor' : 'none'} /> </button> </div>  {storage.description && ( <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text2)', margin: 0 }}>{storage.description}</p> )} </div> </div>  <div className="detail-specs"> {specs.filter(s => s.items.length > 0).map((section, idx) => ( <div key={idx} className="spec-section"> <h2 className="spec-section-title">{section.category}</h2> <div className="spec-grid"> {section.items.map((item, itemIdx) => ( <div key={itemIdx} className="spec-item"> <span className="spec-item-label">{item.label}</span> <span className="spec-item-value">{item.value}</span> </div> ))} </div> </div> ))} </div> {storage.certifications && storage.certifications.length > 0 && ( <div className="detail-notes"> <h2>Certifications</h2> <p>{storage.certifications.join(', ')}</p> </div> )} <PaybackCalculator storage={storage} /> </div> </div> <Footer /> </> ); }
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { supabase } from '../lib/supabase';
+import { useStorageCompare } from '../context/StorageCompareContext';
+import { useStorageFavorites } from '../context/StorageFavoritesContext';
+import { getStorageImageUrl, getStorageFallbackUrl } from '../lib/storageImage';
+import Nav from '../components/Nav';
+import Footer from '../components/Footer';
+import PaybackCalculator from '../components/PaybackCalculator';
+import { Heart, Plus, ArrowLeft } from 'lucide-react';
+import './StorageDetail.css';
+
+export default function StorageDetail() {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const { selectedStorage, addStorage, removeStorage } = useStorageCompare();
+  const { toggleFavorite, isFavorite } = useStorageFavorites();
+
+  const [storage, setStorage] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStorage();
+  }, [slug]);
+
+  const fetchStorage = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('battery_storage')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+
+      if (error) throw error;
+      setStorage(data);
+    } catch (error) {
+      console.error('Error fetching storage:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Nav />
+        <div className="ev-detail">
+          <div className="loading">Loading...</div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!storage) {
+    return (
+      <>
+        <Nav />
+        <div className="ev-detail">
+          <div className="empty-state">Storage system not found</div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  const isInCompare = !!selectedStorage.find((s) => s.id === storage.id);
+  const isInFavorites = isFavorite(storage.id);
+
+  const imageUrl = getStorageImageUrl(storage.brand, storage.model);
+  const fallbackUrl = getStorageFallbackUrl(storage.brand);
+
+  const handleAddToCompare = () => {
+    if (isInCompare) {
+      removeStorage(storage.id);
+    } else {
+      addStorage(storage);
+    }
+  };
+
+  const specs = [
+    {
+      category: 'Capacity & Modules',
+      items: [
+        { label: 'Module Capacity', value: `${storage.module_capacity_kwh} kWh` },
+        { label: 'Min Modules', value: `${storage.min_modules || 1}` },
+        { label: 'Max Modules', value: `${storage.max_modules}` },
+        ...(storage.total_capacity_min_kwh ? [{ label: 'Min System Capacity', value: `${storage.total_capacity_min_kwh.toFixed(1)} kWh` }] : []),
+        ...(storage.total_capacity_max_kwh ? [{ label: 'Max System Capacity', value: `${storage.total_capacity_max_kwh.toFixed(1)} kWh` }] : []),
+      ],
+    },
+    {
+      category: 'Battery Technology',
+      items: [
+        ...(storage.cell_technology ? [{ label: 'Cell Technology', value: storage.cell_technology }] : []),
+        ...(storage.cycle_life ? [{ label: 'Cycle Life', value: `${storage.cycle_life.toLocaleString()} cycles` }] : []),
+        ...(storage.depth_of_discharge_pct ? [{ label: 'Depth of Discharge', value: `${storage.depth_of_discharge_pct}%` }] : []),
+      ],
+    },
+    {
+      category: 'Performance',
+      items: [
+        ...(storage.efficiency_pct ? [{ label: 'Round-Trip Efficiency', value: `${storage.efficiency_pct}%` }] : []),
+        ...(storage.charge_power_kw ? [{ label: 'Max Charge Power', value: `${storage.charge_power_kw} kW` }] : []),
+        ...(storage.discharge_power_kw ? [{ label: 'Max Discharge Power', value: `${storage.discharge_power_kw} kW` }] : []),
+        ...(storage.continuous_power_kw ? [{ label: 'Continuous Power', value: `${storage.continuous_power_kw} kW` }] : []),
+        ...(storage.peak_power_kw ? [{ label: 'Peak Power', value: `${storage.peak_power_kw} kW` }] : []),
+      ],
+    },
+    ...(storage.compatible_inverters && storage.compatible_inverters.length > 0 ? [{
+      category: 'Inverter Compatibility',
+      items: [
+        { label: 'Compatible Inverters', value: storage.compatible_inverters.join(', ') },
+        ...(storage.inverter_type ? [{ label: 'Inverter Type', value: storage.inverter_type }] : []),
+        { label: 'Backup Capable', value: storage.backup_capable ? 'Yes' : 'No' },
+      ],
+    }] : []),
+    {
+      category: 'Installation',
+      items: [
+        ...(storage.mounting_type ? [{ label: 'Mounting Type', value: storage.mounting_type }] : []),
+        ...(storage.dimensions_h_mm ? [{ label: 'Dimensions (H×W×D)', value: `${storage.dimensions_h_mm} × ${storage.dimensions_w_mm} × ${storage.dimensions_d_mm} mm` }] : []),
+        ...(storage.weight_kg ? [{ label: 'Weight', value: `${storage.weight_kg} kg` }] : []),
+        ...(storage.ip_rating ? [{ label: 'IP Rating', value: storage.ip_rating }] : []),
+        ...(storage.operating_temp_min_c !== null && storage.operating_temp_min_c !== undefined ? [{ label: 'Operating Temperature', value: `${storage.operating_temp_min_c}°C to ${storage.operating_temp_max_c}°C` }] : []),
+      ],
+    },
+    {
+      category: 'Economics',
+      items: [
+        { label: 'Price per Module', value: `€${storage.price_per_module_eur?.toLocaleString()}` },
+        ...(storage.installation_cost_eur ? [{ label: 'Installation Cost (est.)', value: `€${storage.installation_cost_eur.toLocaleString()}` }] : []),
+        ...(storage.price_per_module_eur && storage.module_capacity_kwh ? [{ label: 'Price per kWh', value: `€${Math.round(storage.price_per_module_eur / storage.module_capacity_kwh).toLocaleString()}` }] : []),
+      ],
+    },
+    ...((storage.warranty_years || storage.warranty_cycles) ? [{
+      category: 'Warranty',
+      items: [
+        ...(storage.warranty_years ? [{ label: 'Warranty Period', value: `${storage.warranty_years} years` }] : []),
+        ...(storage.warranty_cycles ? [{ label: 'Warranty Cycles', value: `${storage.warranty_cycles.toLocaleString()} cycles` }] : []),
+        ...(storage.warranty_capacity_retention_pct ? [{ label: 'Capacity Retention', value: `${storage.warranty_capacity_retention_pct}%` }] : []),
+      ],
+    }] : []),
+    {
+      category: 'Smart Features',
+      items: [
+        { label: 'Mobile App', value: storage.has_app ? 'Yes' : 'No' },
+        { label: 'Energy Management', value: storage.has_energy_management ? 'Yes' : 'No' },
+        { label: 'Solar Compatible', value: storage.supports_solar ? 'Yes' : 'No' },
+        { label: 'Grid Services', value: storage.supports_grid_services ? 'Yes' : 'No' },
+      ],
+    },
+  ];
+
+  return (
+    <>
+      <Helmet>
+        <title>{`${storage.brand} ${storage.model} — Battery Storage | Enerlytics`}</title>
+        <meta
+          name="description"
+          content={`${storage.brand} ${storage.model}: ${storage.module_capacity_kwh} kWh module, ${storage.cell_technology || 'advanced'} cells, €${storage.price_per_module_eur?.toLocaleString()} per module. View full specs and calculate payback period.`}
+        />
+      </Helmet>
+
+      <Nav />
+
+      <div className="ev-detail">
+        <div className="detail-container">
+          <div className="detail-header">
+            <button className="back-link" onClick={() => navigate('/storage')}>
+              <ArrowLeft size={16} /> Back to Storage Database
+            </button>
+            <h1 className="detail-title">{storage.brand} {storage.model}</h1>
+            <p className="detail-subtitle">{storage.variant || ''}</p>
+          </div>
+
+          <div className="detail-hero">
+            <div className="hero-image-placeholder">
+              <img
+                src={imageUrl}
+                alt={`${storage.brand} ${storage.model}`}
+                className="detail-car-image"
+                onError={(e) => {
+                  if (e.target.src !== fallbackUrl) {
+                    e.target.src = fallbackUrl;
+                  } else {
+                    e.target.style.display = 'none';
+                  }
+                }}
+              />
+            </div>
+
+            <div className="hero-info">
+              <div className="info-badges">
+                {storage.cell_technology && <span className="badge segment">{storage.cell_technology}</span>}
+                {storage.production_location && <span className="badge status">{storage.production_location}</span>}
+                {storage.backup_capable && <span className="badge segment">Backup</span>}
+              </div>
+
+              <div className="info-highlights">
+                <div className="highlight">
+                  <div className="highlight-label">Module</div>
+                  <div className="highlight-value">{storage.module_capacity_kwh} kWh</div>
+                </div>
+                <div className="highlight">
+                  <div className="highlight-label">Price</div>
+                  <div className="highlight-value">€{(storage.price_per_module_eur || 0).toLocaleString()}</div>
+                </div>
+                <div className="highlight">
+                  <div className="highlight-label">Power</div>
+                  <div className="highlight-value">{storage.continuous_power_kw || 'N/A'} kW</div>
+                </div>
+              </div>
+
+              <div className="detail-actions">
+                <button className={`add-compare-btn ${isInCompare ? 'selected' : ''}`} onClick={handleAddToCompare}>
+                  <Plus size={18} />
+                  {isInCompare ? 'Remove from Compare' : 'Add to Compare'}
+                </button>
+                <button
+                  className={`favorite-btn ${isInFavorites ? 'favorited' : ''}`}
+                  onClick={() => toggleFavorite(storage.id)}
+                  title={isInFavorites ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <Heart size={18} fill={isInFavorites ? 'currentColor' : 'none'} />
+                </button>
+              </div>
+
+              {storage.description && (
+                <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text2)', margin: 0 }}>{storage.description}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="detail-specs">
+            {specs.filter(s => s.items.length > 0).map((section, idx) => (
+              <div key={idx} className="spec-section">
+                <h2 className="spec-section-title">{section.category}</h2>
+                <div className="spec-grid">
+                  {section.items.map((item, itemIdx) => (
+                    <div key={itemIdx} className="spec-item">
+                      <span className="spec-item-label">{item.label}</span>
+                      <span className="spec-item-value">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {storage.certifications && storage.certifications.length > 0 && (
+            <div className="detail-notes">
+              <h2>Certifications</h2>
+              <p>{storage.certifications.join(', ')}</p>
+            </div>
+          )}
+
+          <PaybackCalculator storage={storage} />
+        </div>
+      </div>
+
+      <Footer />
+    </>
+  );
+}
