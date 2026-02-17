@@ -13,8 +13,8 @@ export function StorageCompareProvider({ children }) {
   }, [selectedStorage]);
 
   const addStorage = (storage) => {
-    if (selectedStorage.length >= 4) {
-      alert('You can compare up to 4 storage systems at a time');
+    if (selectedStorage.length >= 10) {
+      alert('You can compare up to 10 storage systems at a time');
       return false;
     }
     if (selectedStorage.find((s) => s.id === storage.id)) {
