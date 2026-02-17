@@ -32,10 +32,16 @@ const BRAND_SLUG_MAP = {
   'FENECON': 'fenecon',
   'Fenecon': 'fenecon',
   'Q.HOME': 'qhome',
+  'Q CELLS': 'q-cells',
   'SMA': 'sma',
+  'SolaX': 'solax',
   'SOLARWATT': 'solarwatt',
   'Solarwatt': 'solarwatt',
   'Viessmann': 'viessmann',
+  'Enphase': 'enphase',
+  'Growatt': 'growatt',
+  'Fox ESS': 'fox-ess',
+  'Dyness': 'dyness',
 };
 
 /**
