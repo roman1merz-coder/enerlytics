@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useStorageCompare } from '../context/StorageCompareContext';
 import { useStorageFavorites } from '../context/StorageFavoritesContext';
 import { getStorageImageUrl, getStorageFallbackUrl } from '../lib/storageImage';
-import { getCheapestPrice, getDiscountPercent, getOfferCount } from '../lib/storagePrices';
+import { getCheapestPrice, getDiscountPercent, getOfferCount, getPricePerKwh } from '../lib/storagePrices';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { Search, ChevronDown, Grid3x3, Square, CheckSquare, Heart, Tag, ExternalLink } from 'lucide-react';
@@ -125,6 +125,14 @@ export default function StorageDatabase() {
         return (b.continuous_power_kw || 0) - (a.continuous_power_kw || 0);
       case 'efficiency':
         return (b.efficiency_pct || 0) - (a.efficiency_pct || 0);
+      case 'eur-per-kwh': {
+        const aKwh = getPricePerKwh(a.slug);
+        const bKwh = getPricePerKwh(b.slug);
+        if (aKwh === null && bKwh === null) return 0;
+        if (aKwh === null) return 1;
+        if (bKwh === null) return -1;
+        return aKwh - bKwh;
+      }
       default:
         return 0;
     }
@@ -293,6 +301,7 @@ export default function StorageDatabase() {
                   <option value="capacity">Capacity</option>
                   <option value="power">Power</option>
                   <option value="efficiency">Efficiency</option>
+                  <option value="eur-per-kwh">€/kWh: Low to High</option>
                 </select>
 
                 {selectedStorage.length > 0 && (
@@ -311,6 +320,7 @@ export default function StorageDatabase() {
                 const cheapest = getCheapestPrice(item.slug);
                 const discount = getDiscountPercent(item.slug);
                 const offerCount = getOfferCount(item.slug);
+                const pricePerKwh = getPricePerKwh(item.slug);
 
                 return (
                   <div key={item.id} className="ev-card">
@@ -374,11 +384,16 @@ export default function StorageDatabase() {
                           {cheapest ? (
                             <>
                               <div className="card-price card-price--best">ab €{cheapest.toLocaleString()}</div>
-                              {offerCount > 0 && (
-                                <div className="card-offers-count">
-                                  <Tag size={12} /> {offerCount} Angebote
-                                </div>
-                              )}
+                              <div className="card-price-meta">
+                                {pricePerKwh && (
+                                  <span className="card-eur-per-kwh">€{pricePerKwh}/kWh</span>
+                                )}
+                                {offerCount > 0 && (
+                                  <span className="card-offers-count">
+                                    <Tag size={11} /> {offerCount}
+                                  </span>
+                                )}
+                              </div>
                             </>
                           ) : (
                             <div className="card-price">€{(item.price_per_module_eur || 0).toLocaleString()}</div>

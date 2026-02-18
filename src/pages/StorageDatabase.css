@@ -451,10 +451,27 @@
   color: #059669;
 }
 
+.card-price-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1px;
+}
+
+.card-eur-per-kwh {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e40af;
+  background: #eff6ff;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.2px;
+}
+
 .card-offers-count {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   font-size: 11px;
   color: var(--text3);
   font-weight: 500;
